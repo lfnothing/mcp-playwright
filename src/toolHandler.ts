@@ -1,3 +1,5 @@
+import * as path from 'node:path';
+import * as os from 'node:os';
 import type { Browser, Page } from 'playwright';
 import { chromium, firefox, webkit, request } from 'playwright';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -21,6 +23,7 @@ import {
 } from './tools/browser/index.js';
 import {
   ClickTool,
+  VideoTool,
   IframeClickTool,
   FillTool,
   SelectTool,
@@ -72,6 +75,7 @@ let navigationTool: NavigationTool;
 let closeBrowserTool: CloseBrowserTool;
 let consoleLogsTool: ConsoleLogsTool;
 let clickTool: ClickTool;
+let videoTool: VideoTool;
 let iframeClickTool: IframeClickTool;
 let fillTool: FillTool;
 let selectTool: SelectTool;
@@ -206,6 +210,7 @@ async function ensureBrowser(browserSettings?: BrowserSettings) {
         page = undefined;
       });
 
+      const defaultDownloadsPath = path.join(os.homedir(), 'Downloads');
       const context = await browser.newContext({
         ...userAgent && { userAgent },
         viewport: {
@@ -213,6 +218,9 @@ async function ensureBrowser(browserSettings?: BrowserSettings) {
           height: viewport?.height ?? 720,
         },
         deviceScaleFactor: 1,
+        recordVideo:{
+          dir: defaultDownloadsPath,
+        }
       });
 
       page = await context.newPage();
@@ -309,6 +317,7 @@ function initializeTools(server: any) {
   if (!closeBrowserTool) closeBrowserTool = new CloseBrowserTool(server);
   if (!consoleLogsTool) consoleLogsTool = new ConsoleLogsTool(server);
   if (!clickTool) clickTool = new ClickTool(server);
+  if (!videoTool) videoTool = new VideoTool(server);
   if (!iframeClickTool) iframeClickTool = new IframeClickTool(server);
   if (!fillTool) fillTool = new FillTool(server);
   if (!selectTool) selectTool = new SelectTool(server);
@@ -471,6 +480,9 @@ export async function handleToolCall(
         
       case "playwright_click":
         return await clickTool.execute(args, context);
+
+      case 'playwright_video_record':
+        return await videoTool.execute(args, context);
         
       case "playwright_iframe_click":
         return await iframeClickTool.execute(args, context);

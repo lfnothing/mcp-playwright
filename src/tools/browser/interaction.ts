@@ -226,3 +226,18 @@ export class PressKeyTool extends BrowserToolBase {
 //     });
 //   }
 // }
+
+/**
+ * Tool for Video elements on the page
+ */
+export class VideoTool extends BrowserToolBase {
+  /**
+   * Execute the video tool
+   */
+  async execute(args: any, context: ToolContext): Promise<ToolResponse> {
+    return this.safeExecute(context, async (page) => {
+      await page.video().saveAs(args.filename)
+      return createSuccessResponse(`Video element save as ${args.filename}`);
+    });
+  }
+}
