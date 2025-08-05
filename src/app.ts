@@ -4,6 +4,7 @@ import cors  from 'cors'
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import express, { Request, Response } from 'express'
+import { genNormalResp, shopValuationResp } from './resp.js'
 import { randomUUID } from 'crypto'
 import { handleToolCall } from './toolHandler.js'
 import validateParam  from './middlewares/validateQuery.js'
@@ -349,24 +350,19 @@ app.post('/mcp', cors(), async (req: Request, res: Response) => {
 
 // /api/v1/shop/valuation
 app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate('location'), async (req: Request, res: Response) => {
-    console.log('/api/v1/shop/valuation recevice reqeust: ', req.params)
-    res.status(200).json({
-        "code": 0,
-        "message": "string",
-        "ret": {
-            "data": {
-                "footTraffic": 1,
-                "rent": 0,
-                "nearbyPeopleDesc": "string",
-                "TrafficDistance": 0,
-                "CommercialZoneDistance": 0,
-                "nearbyServices": [
-                    0
-                ],
-                "score": 1
-            }
-        }
-    })
+    console.log('/api/v1/shop/valuation recevice reqeust: ', req.coordinate)
+
+    const data: shopValuationResp = {
+        footTraffic: 1,
+        rent: 15000,
+        nearbyPeopleDesc: '主要人群为25-40岁白领，职业包括金融、IT、咨询等行业，消费能力较强。',
+        trafficDistance: 300,
+        commercialZoneDistance: 1500,
+        nearbyServices: [0, 1, 2],
+        score: 8
+    }
+
+    res.status(200).json(genNormalResp(data))
 })
 
 // Helper function to detect initialize requests
