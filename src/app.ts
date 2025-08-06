@@ -3,13 +3,15 @@ import { z } from "zod"
 import cors  from 'cors'
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
-import express, { Request, Response } from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import { genNormalResp, shopValuationResp } from './resp.js'
 import { randomUUID } from 'crypto'
 import { handleToolCall } from './toolHandler.js'
 import validateParam  from './middlewares/validateQuery.js'
 import validateCoordinate from './middlewares/validateCoordinate.js'
 import { env } from './config/env.js'
+import { queryPlaceAround } from './external/amap.api.js'
+import { errorHandler } from './middlewares/errorHandler.js'
 
 // Create an MCP server with implementation details
 const server = new McpServer({
@@ -284,7 +286,7 @@ const corsOptions = {
 }
 
 // 使用中间件
-app.use(express.json()).use(cors(corsOptions))
+app.use(express.json()).use(cors(corsOptions)).use(errorHandler)
 
 // Map to store transports by session ID
 const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {}
@@ -349,18 +351,130 @@ app.post('/mcp', cors(), async (req: Request, res: Response) => {
     }
 })
 
+// const data: shopValuationResp = {
+//     footTraffic: 1,
+//     rent: 15000,
+//     nearbyPeopleDesc: '主要人群为25-40岁白领，职业包括金融、IT、咨询等行业，消费能力较强。',
+//     trafficDistance: 300,
+//     commercialZoneDistance: 1500,
+//     nearbyServices: [0, 1, 2],
+//     score: 8
+// }
+
 // /api/v1/shop/valuation
-app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate('location'), async (req: Request, res: Response) => {
+app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate('location'), async (req: Request, res: Response, next: NextFunction) => {
     console.log('/api/v1/shop/valuation recevice reqeust: ', req.coordinate)
 
     const data: shopValuationResp = {
-        footTraffic: 1,
-        rent: 15000,
-        nearbyPeopleDesc: '主要人群为25-40岁白领，职业包括金融、IT、咨询等行业，消费能力较强。',
-        trafficDistance: 300,
-        commercialZoneDistance: 1500,
-        nearbyServices: [0, 1, 2],
-        score: 8
+        footTraffic: 0,
+        rent: 0,
+        nearbyPeopleDesc: '',
+        trafficDistance: 0,
+        commercialZoneDistance: 0,
+        nearbyServices: [],
+        score: 0,
+    }
+
+    const location = req.coordinate.lat.toLocaleString() + ',' + req.coordinate.lng.toLocaleString()
+    try {
+        const bus = await queryPlaceAround({ location: location, keywords: '公交站' });
+        const metro = await queryPlaceAround({ location: location, keywords: '购物中心' });
+
+        for (let i = 0; i < bus.pois.length; i++) {
+            const distance = Number(bus.pois[i].distance)
+
+            if (data.trafficDistance === 0 || data.trafficDistance > distance) {
+                data.trafficDistance = distance
+            }
+        }
+
+        for (let i = 0; i < metro.pois.length; i++) {
+             const distance = Number(metro.pois[i].distance)
+
+            if(data.trafficDistance > distance) {
+                data.trafficDistance = distance
+            }
+        }
+
+        // 写字楼 -> 0
+        const officeBuilding = await queryPlaceAround({location: location, type: '120201'})
+        for(let i = 0; i < officeBuilding.pois.length; i++) {
+            const distance = Number(officeBuilding.pois[i].distance)
+
+            if(distance < 1000) {
+                data.nearbyServices.push(0)
+                break
+            }
+        }
+
+        // 学校 -> 1
+        const school = await queryPlaceAround({location: location, type: '141200'})
+        for(let i = 0; i < school.pois.length; i++) {
+            const distance = Number(school.pois[i].distance)
+
+            if(distance < 1000) {
+                data.nearbyServices.push(1)
+                break
+            }
+        }
+
+        // 医院 -> 2
+        const hospital = await queryPlaceAround({location: location, type: '090100'})
+        for(let i = 0; i < hospital.pois.length; i++) {
+            const distance = Number(hospital.pois[i].distance)
+
+            if(distance < 1000) {
+                data.nearbyServices.push(2)
+                break
+            }
+        }
+
+        // 购物中心 -> 3
+        const shopping = await queryPlaceAround({location: location, type: '060101'})
+        for(let i = 0; i < shopping.pois.length; i++) {
+            const distance = Number(shopping.pois[i].distance)
+
+            if(distance < 1000) {
+                data.nearbyServices.push(3)
+                break
+            }
+        }
+
+        // 住宅区 -> 4
+        const residentialArea = await queryPlaceAround({location: location, type: '120300'})
+        for(let i = 0; i < residentialArea.pois.length; i++) {
+            const distance = Number(residentialArea.pois[i].distance)
+
+            if(distance < 1000) {
+                data.nearbyServices.push(4)
+                break
+            }
+        }
+
+        // 公园 -> 5
+        const park = await queryPlaceAround({location: location, type: '110100'})
+        for(let i = 0; i < park.pois.length; i++) {
+            const distance = Number(park.pois[i].distance)
+
+            if(distance < 1000) {
+                data.nearbyServices.push(5)
+                break
+            }
+        }
+
+        // 停车场 -> 6
+        const parking = await queryPlaceAround({location: location, type: '150900'})
+        for(let i = 0; i < parking.pois.length; i++) {
+            const distance = Number(parking.pois[i].distance)
+
+            if(distance < 1000) {
+                data.nearbyServices.push(6)
+                break
+            }
+        }
+
+    } catch(err) {
+        next(err)          // 全局错误中间件统一处理
     }
 
     res.status(200).json(genNormalResp(data))

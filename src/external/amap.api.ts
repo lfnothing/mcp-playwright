@@ -1,4 +1,4 @@
-import amap_request from './amap.client'
+import amap_client from './amap.client.js'
 
 /*
   周边搜索
@@ -23,5 +23,5 @@ export interface PlaceAroundParam {
 }
 
 export function queryPlaceAround(data: PlaceAroundParam): Promise<any> {
-  return amap_request.get('/v3/place/around', { params: data })
+  return amap_client.get('/v5/place/around', { params: data })
 }
