@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto'
 import { handleToolCall } from './toolHandler.js'
 import validateParam  from './middlewares/validateQuery.js'
 import validateCoordinate from './middlewares/validateCoordinate.js'
+import { env } from './config/env.js'
 
 // Create an MCP server with implementation details
 const server = new McpServer({
@@ -374,9 +375,8 @@ function isInitializeRequest(body: unknown): boolean {
 }
 
 // Start the server
-const PORT = 3001
-app.listen(PORT, ()=> {
-    console.log(`MCP Streamable HTTP Server listening on port ${PORT}`)
+app.listen(env.PORT, ()=> {
+    console.log(`MCP Streamable HTTP Server listening on port ${env.PORT}`)
 })
 
 // Handle server shutdown

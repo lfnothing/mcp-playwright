@@ -14,7 +14,7 @@ declare global {
  * @param paramName 查询参数名，默认 location
  */
 export default function validateCoordinate(paramName = 'location') {
-  return (req: Request, res: Response, next: NextFunction):void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const coordStr = req.query[paramName] as string;
 
     const match = coordStr.match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
