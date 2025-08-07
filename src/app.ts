@@ -287,7 +287,7 @@ const corsOptions = {
 }
 
 // 使用中间件
-app.use(express.json()).use(cors(corsOptions)).use(errorHandler)
+app.use(express.json()).use(cors(corsOptions))
 
 // Map to store transports by session ID
 const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {}
@@ -561,6 +561,8 @@ app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate(
 
     res.status(200).json(genNormalResp(data))
 })
+
+app.use(errorHandler)
 
 // Helper function to detect initialize requests
 function isInitializeRequest(body: unknown): boolean {
