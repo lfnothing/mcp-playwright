@@ -11,7 +11,7 @@ export default function validateParam(paramName: string) {
     const paramValue = req.query[paramName];
 
     if(paramValue === '') {
-        res.status(400).json({code: 400,message: '参数错误：参数为空'})
+        res.status(400).json({ code: 400, message: '参数错误：参数为空' })
         return; // 仅终止函数，不返回任何值
     }
 
