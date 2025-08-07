@@ -12,6 +12,7 @@ import validateCoordinate from './middlewares/validateCoordinate.js'
 import { env } from './config/env.js'
 import { queryPlaceAround } from './external/amap.api.js'
 import { errorHandler } from './middlewares/errorHandler.js'
+import { randomInt } from 'crypto';
 
 // Create an MCP server with implementation details
 const server = new McpServer({
@@ -375,6 +376,88 @@ app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate(
         score: 0,
     }
 
+    // 附近人流量列表
+    const footTrafficList = [
+        0,
+        10,
+        100
+    ]
+
+    // 附近人群描述列表
+    const nearbyPeopleDescList = [
+        `早高峰通勤白领
+        核心特征：25-38 岁，写字楼密集区，7:30-9:30 地铁/公交集中出站
+        主要需求：高单价咖啡、便携早餐、30 秒快速支付
+        高频触点：地铁闸机口、共享单车停放点、电梯厅屏幕`,
+
+        `社区宝妈&学龄儿童
+        核心特征：28-35 岁宝妈 + 3-8 岁孩子，下午 15:00-17:00 接送时段出现
+        主要需求：健康轻食、儿童体验课、母婴快消
+        高频触点：幼儿园门口、社区滑梯区、妈妈微信群`,
+
+        `高校夜猫学生
+        核心特征：18-24 岁，夜间 20:00-01:00 活跃，月均可支配 1500-2500 元
+        主要需求：低价夜宵、奶茶甜品、桌游/电竞
+        高频触点：校门口小吃街、宿舍楼下自动售货机、B 站/小红书`,
+
+        `银发晨练族
+        核心特征：55-70 岁，6:00-8:00 公园或小区广场聚集
+        主要需求：平价早点、养生茶歇、健康检测
+        高频触点：公园门口、社区宣传栏、广场舞音响广告`,
+
+        `景区短途游客
+        核心特征：20-45 岁，周末/节假日集中，客单价敏感度低
+        主要需求：城市伴手礼、拍照打卡场景、快速简餐
+        高频触点：景区出口、打卡墙、官方导览小程序`,
+        
+        `24h 夜班医护/安保
+        核心特征：22:00-6:00 在岗，医院/工业园周边
+        主要需求：热食便当、功能饮料、可休息 20 分钟的座位
+        高频触点：医院急诊门口、园区侧门、员工微信群`,
+        
+        `高端车主&代驾司机
+        核心特征：30-50 岁，夜间 21:00-02:00 餐饮街附近找代驾
+        主要需求：醒酒饮品、代驾等候区、快速充电
+        高频触点：餐厅门口、代驾司机聚集点、车载语音广告`,
+
+        `新晋养宠白领
+        核心特征：25-35 岁，一人户或情侣，晚 19:00-21:00 遛狗
+        主要需求：宠物零食、宠物洗护、社交拍照
+        高频触点：宠物公厕、社区草坪、小红书“遛狗打卡”话题`,
+
+        `会展/赛事瞬时人流
+        核心特征：18-45 岁，展会/演唱会前后 2-3 小时爆发
+        主要需求：快速餐饮、应援周边、充电宝租借
+        高频触点：场馆出入口、地铁加密班次、活动官方 APP 弹窗`,
+
+        `工业园区蓝领
+        核心特征：20-40 岁，三班倒，11:30-13:00、17:30-19:00 集中就餐
+        主要需求：15 元以内快餐、大份量、扫码秒付
+        高频触点：厂区门口、员工班车、食堂排队区广告屏`,
+
+        `外籍常驻人员
+        核心特征：25-45 岁，国际学校/外企公寓周边，英语为主
+        主要需求：异国简餐、进口超市、双语服务
+        高频触点：国际学校门口、英文地图 APP、Facebook 社群`,
+
+        `夜生活潮人
+        核心特征：22-35 岁，周五-周日 22:00-03:00 出没酒吧街
+        主要需求：特调鸡尾酒、拍照灯光、深夜食堂
+        高频触点：酒吧排队区、DJ 台、抖音同城热搜榜`
+    ]
+
+    data.footTraffic = footTrafficList[randomInt(0, footTrafficList.length)]
+    data.rent = randomInt(1000, 20001)
+    data.nearbyPeopleDesc = nearbyPeopleDescList[randomInt(0, nearbyPeopleDescList.length)]
+    data.commercialZoneDistance = randomInt(10, 2001)
+    data.score = randomInt(1, 11)
+    
+    for(let i = 0; i <= 6; i++) {
+        if((randomInt(0, 10) % 2) === 0) {
+            data.nearbyServices.push(i)
+        }
+    }
+    
     const location = req.coordinate.lat.toLocaleString() + ',' + req.coordinate.lng.toLocaleString()
     try {
         const bus = await queryPlaceAround({ location: location, keywords: '公交站' });
@@ -396,83 +479,82 @@ app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate(
             }
         }
 
-        // 写字楼 -> 0
-        const officeBuilding = await queryPlaceAround({location: location, type: '120201'})
-        for(let i = 0; i < officeBuilding.pois.length; i++) {
-            const distance = Number(officeBuilding.pois[i].distance)
+        // // 写字楼 -> 0
+        // const officeBuilding = await queryPlaceAround({location: location, type: '120201'})
+        // for(let i = 0; i < officeBuilding.pois.length; i++) {
+        //     const distance = Number(officeBuilding.pois[i].distance)
 
-            if(distance < 1000) {
-                data.nearbyServices.push(0)
-                break
-            }
-        }
+        //     if(distance < 1000) {
+        //         data.nearbyServices.push(0)
+        //         break
+        //     }
+        // }
 
-        // 学校 -> 1
-        const school = await queryPlaceAround({location: location, type: '141200'})
-        for(let i = 0; i < school.pois.length; i++) {
-            const distance = Number(school.pois[i].distance)
+        // // 学校 -> 1
+        // const school = await queryPlaceAround({location: location, type: '141200'})
+        // for(let i = 0; i < school.pois.length; i++) {
+        //     const distance = Number(school.pois[i].distance)
 
-            if(distance < 1000) {
-                data.nearbyServices.push(1)
-                break
-            }
-        }
+        //     if(distance < 1000) {
+        //         data.nearbyServices.push(1)
+        //         break
+        //     }
+        // }
 
-        // 医院 -> 2
-        const hospital = await queryPlaceAround({location: location, type: '090100'})
-        for(let i = 0; i < hospital.pois.length; i++) {
-            const distance = Number(hospital.pois[i].distance)
+        // // 医院 -> 2
+        // const hospital = await queryPlaceAround({location: location, type: '090100'})
+        // for(let i = 0; i < hospital.pois.length; i++) {
+        //     const distance = Number(hospital.pois[i].distance)
 
-            if(distance < 1000) {
-                data.nearbyServices.push(2)
-                break
-            }
-        }
+        //     if(distance < 1000) {
+        //         data.nearbyServices.push(2)
+        //         break
+        //     }
+        // }
 
-        // 购物中心 -> 3
-        const shopping = await queryPlaceAround({location: location, type: '060101'})
-        for(let i = 0; i < shopping.pois.length; i++) {
-            const distance = Number(shopping.pois[i].distance)
+        // // 购物中心 -> 3
+        // const shopping = await queryPlaceAround({location: location, type: '060101'})
+        // for(let i = 0; i < shopping.pois.length; i++) {
+        //     const distance = Number(shopping.pois[i].distance)
 
-            if(distance < 1000) {
-                data.nearbyServices.push(3)
-                break
-            }
-        }
+        //     if(distance < 1000) {
+        //         data.nearbyServices.push(3)
+        //         break
+        //     }
+        // }
 
-        // 住宅区 -> 4
-        const residentialArea = await queryPlaceAround({location: location, type: '120300'})
-        for(let i = 0; i < residentialArea.pois.length; i++) {
-            const distance = Number(residentialArea.pois[i].distance)
+        // // 住宅区 -> 4
+        // const residentialArea = await queryPlaceAround({location: location, type: '120300'})
+        // for(let i = 0; i < residentialArea.pois.length; i++) {
+        //     const distance = Number(residentialArea.pois[i].distance)
 
-            if(distance < 1000) {
-                data.nearbyServices.push(4)
-                break
-            }
-        }
+        //     if(distance < 1000) {
+        //         data.nearbyServices.push(4)
+        //         break
+        //     }
+        // }
 
-        // 公园 -> 5
-        const park = await queryPlaceAround({location: location, type: '110100'})
-        for(let i = 0; i < park.pois.length; i++) {
-            const distance = Number(park.pois[i].distance)
+        // // 公园 -> 5
+        // const park = await queryPlaceAround({location: location, type: '110100'})
+        // for(let i = 0; i < park.pois.length; i++) {
+        //     const distance = Number(park.pois[i].distance)
 
-            if(distance < 1000) {
-                data.nearbyServices.push(5)
-                break
-            }
-        }
+        //     if(distance < 1000) {
+        //         data.nearbyServices.push(5)
+        //         break
+        //     }
+        // }
 
-        // 停车场 -> 6
-        const parking = await queryPlaceAround({location: location, type: '150900'})
-        for(let i = 0; i < parking.pois.length; i++) {
-            const distance = Number(parking.pois[i].distance)
+        // // 停车场 -> 6
+        // const parking = await queryPlaceAround({location: location, type: '150900'})
+        // for(let i = 0; i < parking.pois.length; i++) {
+        //     const distance = Number(parking.pois[i].distance)
 
-            if(distance < 1000) {
-                data.nearbyServices.push(6)
-                break
-            }
-        }
-
+        //     if(distance < 1000) {
+        //         data.nearbyServices.push(6)
+        //         break
+        //     }
+        // }
     } catch(err) {
         next(err)          // 全局错误中间件统一处理
     }
