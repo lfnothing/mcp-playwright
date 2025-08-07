@@ -378,7 +378,7 @@ app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate(
 
     // 附近人流量列表
     const footTrafficList = [
-        0,
+        1,
         10,
         100
     ]
@@ -457,7 +457,7 @@ app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate(
             data.nearbyServices.push(i)
         }
     }
-    
+
     const location = req.coordinate.lat.toLocaleString() + ',' + req.coordinate.lng.toLocaleString()
     try {
         const bus = await queryPlaceAround({ location: location, keywords: '公交站' });
