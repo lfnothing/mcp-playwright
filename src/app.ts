@@ -461,7 +461,7 @@ app.get('/api/v1/shop/valuation', validateParam('location'), validateCoordinate(
     const location = req.coordinate.lat.toLocaleString() + ',' + req.coordinate.lng.toLocaleString()
     try {
         const bus = await queryPlaceAround({ location: location, keywords: '公交站' });
-        const metro = await queryPlaceAround({ location: location, keywords: '购物中心' });
+        const metro = await queryPlaceAround({ location: location, keywords: '地铁站' });
 
         for (let i = 0; i < bus.pois.length; i++) {
             const distance = Number(bus.pois[i].distance)
