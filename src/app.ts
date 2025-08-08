@@ -512,9 +512,9 @@ app.get(
     }
 
     const location =
-      req.coordinate.lat.toLocaleString() +
+      req.coordinate.lng.toLocaleString() +
       "," +
-      req.coordinate.lng.toLocaleString();
+      req.coordinate.lat.toLocaleString();
     try {
       const bus = await queryPlaceAround({
         location: location,
@@ -544,10 +544,7 @@ app.get(
       const regeo = await queryRegeo({
         location: location,
       });
-      data.address =
-        regeo.regeocode.formatted_address.length > 0
-          ? regeo.regeocode.formatted_address[0]
-          : "";
+      data.address = regeo.regeocode.formatted_address;
 
       //   // 写字楼 -> 0
       //   const officeBuilding = await queryPlaceAround({
