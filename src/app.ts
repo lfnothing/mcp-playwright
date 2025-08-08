@@ -10,7 +10,7 @@ import { handleToolCall } from "./toolHandler.js";
 import validateParam from "./middlewares/validateQuery.js";
 import validateCoordinate from "./middlewares/validateCoordinate.js";
 import { env } from "./config/env.js";
-import { queryPlaceAround } from "./external/amap.api.js";
+import { queryPlaceAround, queryRegeo } from "./external/amap.api.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { randomInt } from "crypto";
 
@@ -540,6 +540,14 @@ app.get(
           data.trafficDistance = distance;
         }
       }
+
+      const regeo = await queryRegeo({
+        location: location,
+      });
+      data.address =
+        regeo.regeocode.formatted_address.length > 0
+          ? regeo.regeocode.formatted_address[0]
+          : "";
 
       //   // 写字楼 -> 0
       //   const officeBuilding = await queryPlaceAround({
