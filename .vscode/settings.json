@@ -1,0 +1,12 @@
+// 全局设置：文件 → 首选项 → 设置 → 打开设置(JSON)
+{
+  // 设置 typescript 文件保存格式化
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",  // 指定默认格式化器
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  }
+}
