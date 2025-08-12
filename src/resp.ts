@@ -72,6 +72,17 @@ export interface shopValuationResp {
   [property: string]: any;
 }
 
+/**
+ * 商铺地址的AI分析报告返回值
+ */
+export interface shopValuationByAIResp {
+  /**
+   * 分析报告
+   */
+  valuation: string;
+  [property: string]: any;
+}
+
 export function genNormalResp(data: any) {
   const resp: Resp = {
     code: 0,
