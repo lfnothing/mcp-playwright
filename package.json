@@ -39,6 +39,7 @@
     "envalid": "^8.1.0",
     "express": "^5.1.0",
     "mcp-evals": "^1.0.18",
+    "openai": "^5.12.1",
     "playwright": "1.53.1",
     "uuid": "11.1.0"
   },
