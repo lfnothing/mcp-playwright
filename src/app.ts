@@ -666,7 +666,10 @@ app.get(
   validateParam("location"),
   validateCoordinate("location"),
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log("/api/v1/shop/valuation recevice reqeust: ", req.coordinate);
+    console.log(
+      "/api/v1/shop/valuationByAI recevice reqeust: ",
+      req.coordinate
+    );
 
     const data: shopValuationByAIResp = {
       valuation:
