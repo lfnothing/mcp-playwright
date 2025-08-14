@@ -339,7 +339,7 @@ server.tool(
 const app = express();
 const corsOptions = {
   origin: "*",
-  allowedHeaders: "Accept,Cache-Control",
+  allowedHeaders: "accept,cache-control",
   exposedHeaders: "mcp-session-id",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
@@ -712,9 +712,10 @@ app.get(
 // /api/v1/shop/valuationByAI/stream
 app.get(
   "/api/v1/shop/valuationByAI/stream",
+  cors(),
   validateParam("location"),
   validateCoordinate("location"),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response) => {
     console.log(
       "api/v1/shop/valuationByAI/stream recevice reqeust: ",
       req.coordinate
