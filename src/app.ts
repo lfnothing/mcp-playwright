@@ -339,6 +339,7 @@ server.tool(
 const app = express();
 const corsOptions = {
   origin: "*",
+  allowedHeaders: "Content-Type,Cache-Control",
   exposedHeaders: "mcp-session-id",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
@@ -741,16 +742,6 @@ app.get(
         },
       ],
     });
-
-    // 1. 允许的域名；* 只在开发阶段用
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    // 2. 如果要带 Cookie 或 Authorization 头
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    // 3. SSE 不需要额外预检，但写了无害
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
-    );
 
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
