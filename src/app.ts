@@ -743,6 +743,7 @@ app.get(
     });
 
     res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
     res.flushHeaders();
 
     for await (const chunk of stream) {
