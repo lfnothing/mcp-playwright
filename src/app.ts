@@ -339,7 +339,7 @@ server.tool(
 const app = express();
 const corsOptions = {
   origin: "*",
-  allowedHeaders: "Content-Type,Cache-Control",
+  allowedHeaders: "Accept,Cache-Control",
   exposedHeaders: "mcp-session-id",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
