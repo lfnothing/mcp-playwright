@@ -679,29 +679,31 @@ app.get(
       valuation: "",
     };
 
-    const runner = moonshot_client.chat.completions.runTools({
-      model: "kimi-k2-0711-preview",
-      stream: true,
-      tools: [
-        zodFunction({
-          name: "QueryRegeoTool",
-          function: QueryRegeoTool,
-          parameters: QueryRegeoToolParams,
-          description: "查询坐标点的具体位置信息",
-        }),
-      ],
-      messages: [
-        {
-          role: "system",
-          content:
-            "你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。同时，你会拒绝一切涉及恐怖主义，种族歧视，黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
-        },
-        {
-          role: "user",
-          content: `帮我分析这个坐标点 (${location}) 的地址适合开店吗？`,
-        },
-      ],
-    });
+    const runner = moonshot_client.chat.completions
+      .runTools({
+        model: "kimi-k2-0711-preview",
+        stream: true,
+        tools: [
+          zodFunction({
+            name: "QueryRegeoTool",
+            function: QueryRegeoTool,
+            parameters: QueryRegeoToolParams,
+            description: "查询坐标点的具体位置信息",
+          }),
+        ],
+        messages: [
+          {
+            role: "system",
+            content:
+              "你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。同时，你会拒绝一切涉及恐怖主义，种族歧视，黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
+          },
+          {
+            role: "user",
+            content: `帮我分析这个坐标点 (${location}) 的地址适合开店吗？`,
+          },
+        ],
+      })
+      .on("message", (msg) => console.log("msg", msg));
 
     const result = await runner.finalChatCompletion();
     data.valuation = result.choices[0].message.content;
@@ -710,6 +712,7 @@ app.get(
 );
 
 // /api/v1/shop/valuationByAI/stream
+// todo 添加错误处理
 app.get(
   "/api/v1/shop/valuationByAI/stream",
   cors(),
@@ -724,40 +727,47 @@ app.get(
     const location =
       req.coordinate.lng.toString() + "," + req.coordinate.lat.toString();
 
-    const data: shopValuationByAIResp = {
-      valuation: "",
-    };
-
-    const stream = await moonshot_client.chat.completions.create({
-      model: "kimi-k2-0711-preview",
-      stream: true,
-      messages: [
-        {
-          role: "system",
-          content:
-            "你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。同时，你会拒绝一切涉及恐怖主义，种族歧视，黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
-        },
-        {
-          role: "user",
-          content: `帮我分析这个坐标点 (${location}) 的地址适合开店吗？`,
-        },
-      ],
-    });
-
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.flushHeaders();
 
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta?.content || "";
+    moonshot_client.chat.completions
+      .runTools({
+        model: "kimi-k2-0711-preview",
+        stream: true,
+        tools: [
+          zodFunction({
+            name: "QueryRegeoTool",
+            function: QueryRegeoTool,
+            parameters: QueryRegeoToolParams,
+            description: "查询坐标点的具体位置信息",
+          }),
+        ],
+        messages: [
+          {
+            role: "system",
+            content:
+              "你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。同时，你会拒绝一切涉及恐怖主义，种族歧视，黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
+          },
+          {
+            role: "user",
+            content: `帮我分析这个坐标点 (${location}) 的地址适合开店吗？`,
+          },
+        ],
+      })
+      .on("chunk", (chunk) => {
+        const delta = chunk.choices[0]?.delta?.content || "";
 
-      // SSE 协议要求
-      res.write(`data: ${JSON.stringify({ delta })}\n\n`);
-      if (chunk.choices[0]?.finish_reason) {
-        res.write("data: [DONE]\n\n");
-        res.end();
-      }
-    }
+        // SSE 协议要求
+        res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+        if (
+          chunk.choices[0]?.finish_reason &&
+          chunk.choices[0].finish_reason === "stop"
+        ) {
+          res.write("data: [DONE]\n\n");
+          res.end();
+        }
+      });
   }
 );
 
