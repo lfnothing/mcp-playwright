@@ -751,12 +751,6 @@ app.get(
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content || "";
 
-      res.write(`data: ${JSON.stringify({ delta })}\n\n`);
-      if (chunk.choices[0]?.finish_reason) {
-        res.write("data: [DONE]\n\n");
-        res.end();
-      }
-
       // SSE 协议要求
       res.write(`data: ${JSON.stringify({ delta })}\n\n`);
       if (chunk.choices[0]?.finish_reason) {
